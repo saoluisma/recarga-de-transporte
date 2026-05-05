@@ -498,12 +498,16 @@
     let currentStep = 1;
     let fotosSlots = [];
     let isCreating = false;
+    let mensagensUnsubscribe = null;
 
-    // Carregar mensagens predefinidas do Firebase
-    async function carregarMensagensPredefinidas() {
-        try {
-            // Primeiro, tentar carregar do Firebase
-            const snapshot = await db.ref('config/mensagens_predefinidas').once('value');
+    // Carregar mensagens predefinidas do Firebase com LISTENER EM TEMPO REAL
+    function iniciarListenerMensagens() {
+        if (mensagensUnsubscribe) {
+            mensagensUnsubscribe();
+        }
+        
+        const mensagensRef = db.ref('config/mensagens_predefinidas');
+        const listener = mensagensRef.on('value', (snapshot) => {
             const firebaseMsgs = snapshot.val();
             
             if (firebaseMsgs && firebaseMsgs.length === 5) {
@@ -527,26 +531,20 @@
                 }
             }
             
-            renderizarMensagens();
-        } catch (error) {
-            console.error('Erro ao carregar mensagens:', error);
-            // Fallback para mensagens padrão
-            mensagensPredefinidas = [
-                "🏠 Bem-vindo à sua sala!",
-                "✨ Aproveite sua experiência",
-                "💬 Qualquer dúvida, chame no chat",
-                "🙏 Obrigado pela visita!",
-                "⭐ Volte sempre!"
-            ];
-            renderizarMensagens();
-        }
+            // Se estiver na etapa 3, atualizar a interface
+            if (currentStep === 3) {
+                renderizarMensagens();
+            }
+        });
+        
+        mensagensUnsubscribe = () => mensagensRef.off('value', listener);
     }
 
     function renderizarMensagens() {
         const container = document.getElementById('mensagensList');
         if (!container) return;
         
-        if (mensagensPredefinidas.length === 0) {
+        if (!mensagensPredefinidas || mensagensPredefinidas.length === 0) {
             container.innerHTML = '<div class="empty-state">Nenhuma mensagem disponível</div>';
             return;
         }
@@ -558,9 +556,13 @@
             </div>
         `).join('');
         
-        // Adicionar event listeners
+        // Reaplicar seleções
         document.querySelectorAll('.msg-item').forEach(item => {
-            item.addEventListener('click', () => toggleMensagem(parseInt(item.dataset.msgIndex)));
+            const idx = parseInt(item.dataset.msgIndex);
+            if (mensagensSelecionadas.includes(idx)) {
+                item.classList.add('selected');
+            }
+            item.addEventListener('click', () => toggleMensagem(idx));
         });
         
         atualizarContadorMsgs();
@@ -704,7 +706,6 @@
         atualizarProgresso();
     }
 
-    // Validação da etapa 1
     function validarEtapa1() {
         numeroCasa = document.getElementById('numeroCasa').value.trim();
         if (!numeroCasa) {
@@ -714,7 +715,6 @@
         return true;
     }
 
-    // Validação da etapa 3
     function validarEtapa3() {
         if (mensagensSelecionadas.length === 0) {
             alert("Selecione pelo menos uma mensagem");
@@ -723,10 +723,8 @@
         return true;
     }
 
-    // Função para criar sala (COM CONTROLE DE DUPLICAÇÃO)
     async function criarSala() {
         if (isCreating) {
-            console.log('Já está criando uma sala, aguarde...');
             return;
         }
         
@@ -791,7 +789,6 @@
         }
     }
 
-    // Navegação entre etapas
     async function irParaEtapa(etapa) {
         if (etapa === 2 && currentStep === 1) {
             if (!validarEtapa1()) return;
@@ -810,7 +807,8 @@
         }
         
         if (currentStep === 3) {
-            await carregarMensagensPredefinidas();
+            // Garantir que as mensagens estejam atualizadas antes de mostrar
+            renderizarMensagens();
         }
     }
 
@@ -868,7 +866,7 @@
 
     // Inicialização
     setupFotosGrid();
-    carregarMensagensPredefinidas();
+    iniciarListenerMensagens(); // Inicia listener em tempo real
     mostrarEtapa(1);
 </script>
 </body>
