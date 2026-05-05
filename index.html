@@ -2,1338 +2,874 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Recarga Transporte | PayVale</title>
-    <!-- Google Fonts & Font Awesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <!-- QRCode.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mobile | Cadastro Rápido de Salas</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #eef2f7 100%);
-            color: #1a2c3e;
-            padding: 2rem 1rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f5;
             min-height: 100vh;
+            padding: 1rem;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 2.5rem;
-        }
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1E6F5C;
-            letter-spacing: -0.5px;
-        }
-        .header p {
-            color: #5a6e7c;
-            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .dashboard {
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+
+        .progress-steps {
             display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
         }
-        .card-left {
-            flex: 1.2;
-            min-width: 320px;
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #ccc;
+            font-weight: 500;
         }
-        .card-right {
-            flex: 1.8;
-            min-width: 360px;
+
+        .progress-step.active {
+            color: #007aff;
+        }
+
+        .progress-step.completed {
+            color: #34c759;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #007aff;
+            transition: width 0.3s ease;
+            border-radius: 2px;
         }
 
         .card {
-            background: #ffffff;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
-            padding: 2rem;
-            margin-bottom: 1.8rem;
-            border: 1px solid rgba(30, 111, 92, 0.1);
-        }
-
-        .card h2 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #0f3b32;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-left: 4px solid #1E6F5C;
-            padding-left: 1rem;
-        }
-
-        .card h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
             margin-bottom: 1rem;
-            color: #2c4a3e;
+        }
+
+        .card-header {
+            padding: 1.25rem;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e1e1e;
+        }
+
+        .card-header p {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .card-body {
+            padding: 1.25rem;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
-        label {
-            font-weight: 500;
+
+        .form-group label {
             display: block;
-            margin-bottom: 0.6rem;
-            font-size: 0.85rem;
-            color: #2c5a4c;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
         }
-        label .required {
-            color: #e74c3c;
-            margin-left: 4px;
-        }
-        input {
+
+        .form-group input {
             width: 100%;
-            padding: 1rem 1.2rem;
-            border-radius: 24px;
-            border: 1.5px solid #e2e8f0;
-            background: #ffffff;
-            font-size: 1rem;
-            transition: 0.2s;
-            font-family: 'Inter', monospace;
-        }
-        input:focus {
-            outline: none;
-            border-color: #1E6F5C;
-            box-shadow: 0 0 0 3px rgba(30, 111, 92, 0.1);
-        }
-        
-        .email-group {
-            position: relative;
-        }
-        .email-verify-btn {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #1E6F5C;
-            color: white;
-            border: none;
-            border-radius: 40px;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .email-verify-btn:hover {
-            background: #0e5948;
-        }
-        .email-verify-btn:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        .email-status {
-            font-size: 0.75rem;
-            margin-top: 0.5rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 12px;
-            display: inline-block;
-        }
-        .email-status.verified {
-            background: #d4edda;
-            color: #155724;
-        }
-        .email-status.pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .email-status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .card-mask-hint {
-            font-size: 0.7rem;
-            color: #7c8f9c;
-            margin-top: 0.3rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .amount-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            margin: 1.5rem 0 1rem;
-        }
-        .amount-btn {
-            flex: 1 0 calc(33% - 0.8rem);
-            min-width: 85px;
-            background: #f8fafc;
-            border: 1.5px solid #e2edf2;
-            border-radius: 60px;
-            padding: 0.9rem 0;
-            font-weight: 700;
-            font-size: 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #1e4663;
-        }
-        .amount-btn.selected {
-            background: #1E6F5C;
-            border-color: #1E6F5C;
-            color: white;
-            box-shadow: 0 8px 20px rgba(30, 111, 92, 0.25);
-        }
-        .amount-btn:hover {
-            transform: translateY(-2px);
-            background: #eef3fc;
-        }
-
-        .btn-primary {
-            background: #1E6F5C;
-            border: none;
             padding: 1rem;
-            width: 100%;
-            border-radius: 60px;
-            font-weight: 700;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 1rem;
             font-size: 1rem;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 1rem;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background: #0e5948;
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(30, 111, 92, 0.3);
-        }
-        .btn-primary:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-            opacity: 0.6;
+            transition: all 0.2s;
+            background: #fafafa;
         }
 
-        .resend-btn {
-            background: #6c757d;
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-        }
-        .resend-btn:not(:disabled):hover {
-            background: #5a6268;
+        .form-group input:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
         }
 
-        .qrcode-container {
+        .fotos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .foto-item {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border: 1.5px dashed #ccc;
+            border-radius: 1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #ffffff;
-            border-radius: 28px;
-            padding: 1.5rem;
-            text-align: center;
-            border: 2px dashed #cfe3db;
-        }
-        #qrcode {
-            margin: 1rem auto;
-            display: flex;
-            justify-content: center;
-            background: white;
-            padding: 10px;
-            border-radius: 20px;
-        }
-        .pix-copy-area {
-            background: #f8fafc;
-            padding: 0.8rem;
-            border-radius: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-top: 1.2rem;
-            width: 100%;
-        }
-        .pix-code {
-            font-family: monospace;
-            font-size: 0.7rem;
-            word-break: break-all;
-            background: white;
-            padding: 0.6rem 1rem;
-            border-radius: 40px;
-            flex: 1;
-            border: 1px solid #e2edf2;
-        }
-        .whatsapp-btn {
-            background: #25D366;
-            border: none;
-            margin-top: 1rem;
-        }
-        .whatsapp-btn:hover {
-            background: #128C7E;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
         }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .foto-item.has-photo {
+            border: 1.5px solid #34c759;
+            background: #f0fdf4;
+        }
+
+        .foto-preview {
             width: 100%;
             height: 100%;
+            object-fit: cover;
+        }
+
+        .foto-placeholder {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.7rem;
+        }
+
+        .foto-placeholder span {
+            font-size: 1.5rem;
+        }
+
+        .remove-foto {
+            position: absolute;
+            top: 4px;
+            right: 4px;
             background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        .modal-card {
-            background: white;
-            border-radius: 40px;
-            max-width: 420px;
-            width: 90%;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 30px 50px rgba(0,0,0,0.2);
-            transform: scale(0.9);
-            transition: transform 0.2s;
-        }
-        .modal-overlay.active .modal-card {
-            transform: scale(1);
-        }
-        .modal-card h3 {
-            font-size: 1.8rem;
-            color: #1E6F5C;
-            margin-bottom: 1rem;
-        }
-        .modal-details {
-            background: #f0f7f4;
-            padding: 1rem;
-            border-radius: 24px;
-            margin: 1.5rem 0;
-        }
-        .modal-details p {
-            font-size: 1rem;
-            margin: 0.5rem 0;
-        }
-        .total-highlight {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #1E6F5C;
-        }
-        .btn-modal {
-            background: #1E6F5C;
-            color: white;
-            border: none;
-            padding: 0.9rem 1.8rem;
-            border-radius: 60px;
-            font-weight: 600;
+            font-size: 0.75rem;
             cursor: pointer;
-            margin-top: 1rem;
-            width: 100%;
-        }
-        .btn-modal-outline {
-            background: transparent;
-            border: 1px solid #cbd5e1;
-            color: #4a6a5e;
-            margin-top: 0.8rem;
         }
 
-        .payment-pending-message {
-            background: #e6f7f0;
-            border-radius: 20px;
-            padding: 0.8rem;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: #1E6F5C;
-        }
-        
-        .code-verification {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e2edf2;
-        }
-        .code-input-group {
+        .msgs-list {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
         }
-        .code-input {
+
+        .msg-item {
+            background: #f8f9fa;
+            border: 1.5px solid #e9ecef;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .msg-item.selected {
+            background: #e3f2fd;
+            border-color: #007aff;
+        }
+
+        .msg-check {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .msg-item.selected .msg-check {
+            background: #007aff;
+            border-color: #007aff;
+        }
+
+        .msg-item.selected .msg-check::after {
+            content: "✓";
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .msg-text {
             flex: 1;
+            font-size: 0.875rem;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .btn {
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #005fcb;
+            transform: scale(0.98);
+        }
+
+        .btn-primary.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:active {
+            background: #dee2e6;
+        }
+
+        .btn-success {
+            background: #34c759;
+            color: white;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .nav-buttons .btn {
+            flex: 1;
+        }
+
+        .result-card {
             text-align: center;
-            font-size: 1.5rem;
-            letter-spacing: 4px;
-            font-weight: bold;
         }
-        .code-status {
-            font-size: 0.75rem;
-            margin-top: 0.5rem;
-            padding: 0.3rem;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .code-status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .code-status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .code-status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .code-status.warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .countdown-timer {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #1E6F5C;
-            margin-top: 0.5rem;
-        }
-        
-        .loading-spinner {
+
+        .qr-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
+            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #34c759;
             border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 0.6s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        .success-icon::after {
+            content: "✓";
+            font-size: 2.5rem;
+            color: white;
+            font-weight: bold;
         }
-        
-        footer {
+
+        .info-text {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.5rem;
+            word-break: break-all;
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .counter {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.5rem;
             text-align: center;
-            margin-top: 2rem;
-            font-size: 0.75rem;
-            color: #7c8f9c;
         }
-        
-        @media (max-width: 780px) {
-            .dashboard {
-                flex-direction: column;
-            }
-            .amount-btn {
-                flex: 1 0 calc(50% - 0.8rem);
-            }
-            .email-verify-btn {
-                position: static;
-                transform: none;
-                margin-top: 0.5rem;
-                width: 100%;
-            }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1><i class="fas fa-bus"></i> Recarga Transporte</h1>
-        <p>Recarregue seu cartão com segurança e agilidade</p>
+        <h1>📱 Cadastro Rápido</h1>
+        <p>Crie sua sala em poucos passos</p>
     </div>
 
-    <div class="dashboard">
-        <div class="card-left">
-            <div class="card">
-                <h2><i class="fas fa-id-card"></i> Dados do Cartão</h2>
-                
-                <!-- Nome do Titular - PRIMEIRO CAMPO (OBRIGATÓRIO) -->
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="progress-step" id="stepLabel1">1. Número</div>
+            <div class="progress-step" id="stepLabel2">2. Fotos</div>
+            <div class="progress-step" id="stepLabel3">3. Mensagens</div>
+            <div class="progress-step" id="stepLabel4">4. Concluir</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <!-- Etapa 1: Número da Casa -->
+    <div id="step1" class="step-content active">
+        <div class="card">
+            <div class="card-header">
+                <h2>Qual o número da sala?</h2>
+                <p>Digite um identificador único</p>
+            </div>
+            <div class="card-body">
                 <div class="form-group">
-                    <label>Nome do Titular <span class="required">*</span></label>
-                    <input type="text" id="cardHolder" placeholder="Digite o nome completo conforme consta no cartão" autocomplete="off">
-                    <div class="card-mask-hint">
-                        <i class="fas fa-info-circle"></i> <span>Nome obrigatório para identificação</span>
-                    </div>
+                    <label>Número / Nome da Sala</label>
+                    <input type="text" id="numeroCasa" placeholder="Ex: 101, Apto 42, Loja 1" autocomplete="off">
                 </div>
-                
-                <!-- Número do Cartão Transporte - SEGUNDO CAMPO -->
-                <div class="form-group">
-                    <label>Número do Cartão Transporte <span class="required">*</span></label>
-                    <input type="text" id="cardNumber" placeholder="00.00.00000000-0" autocomplete="off" maxlength="18">
-                    <div class="card-mask-hint">
-                        <i class="fas fa-info-circle"></i> <span>Formato: 00.00.00000000-0</span>
-                    </div>
-                </div>
-                
-                <!-- E-mail - TERCEIRO CAMPO -->
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> E-mail para confirmação <span class="required">*</span></label>
-                    <div class="email-group">
-                        <input type="email" id="email" placeholder="seuemail@exemplo.com" autocomplete="off">
-                        <button id="verifyEmailBtn" class="email-verify-btn" style="display: none;">Verificar E-mail</button>
-                    </div>
-                    <div id="emailStatus" class="email-status"></div>
-                    <div class="card-mask-hint">
-                        <i class="fas fa-info-circle"></i> <span>Você receberá um código de verificação por e-mail</span>
-                    </div>
-                </div>
-                
-                <h3><i class="fas fa-ticket-alt"></i> Selecione o valor da recarga</h3>
-                <div class="amount-grid" id="amountGrid"></div>
-                
-                <button class="btn-primary" id="btnRecarregar" disabled>
-                    <i class="fas fa-arrow-right"></i> Continuar para Pagamento
-                </button>
+                <button class="btn btn-primary" id="btnProximo1">Continuar →</button>
             </div>
         </div>
+    </div>
 
-        <div class="card-right">
-            <div class="card" id="paymentCard">
-                <h2><i class="fas fa-qrcode"></i> Pagamento via Pix</h2>
-                <div class="qrcode-container" id="qrContainer" style="min-height: 320px;">
-                    <div style="text-align: center; padding: 1rem;">
-                        <i class="fas fa-lock" style="font-size: 3rem; color: #cbd5e1;"></i>
-                        <p style="margin-top: 1rem; color: #7e8c9e;">Preencha os dados do cartão, verifique seu e-mail,<br>selecione o valor e clique em "Continuar para Pagamento"</p>
-                    </div>
+    <!-- Etapa 2: Fotos -->
+    <div id="step2" class="step-content">
+        <div class="card">
+            <div class="card-header">
+                <h2>📸 Adicione fotos</h2>
+                <p>Selecione até 5 fotos para esta sala</p>
+            </div>
+            <div class="card-body">
+                <div class="fotos-grid" id="fotosGrid"></div>
+                <div class="counter" id="fotosCounter">0 de 5 fotos selecionadas</div>
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btnVoltar2">← Voltar</button>
+                    <button class="btn btn-primary" id="btnProximo2">Continuar →</button>
                 </div>
             </div>
         </div>
     </div>
-    <footer>© PayVale Recarga Transporte • Compromisso e profissionalismo</footer>
-</div>
 
-<!-- MODAL DE CONFIRMAÇÃO DE VALORES -->
-<div id="modalTaxa" class="modal-overlay">
-    <div class="modal-card">
-        <i class="fas fa-receipt" style="font-size: 2.5rem; color: #1E6F5C;"></i>
-        <h3>Detalhes da recarga</h3>
-        <div class="modal-details">
-            <p><strong>Nome do Titular:</strong> <span id="modalHolderName">-</span></p>
-            <p><strong>Número do Cartão:</strong> <span id="modalCardNumber">-</span></p>
-            <p><strong>Valor da recarga:</strong> <span id="modalValorBase">R$ 0,00</span></p>
-            <p><strong>Taxa de serviço:</strong> <span id="modalTaxaValor">R$ 0,00</span></p>
-            <hr style="margin: 12px 0;">
-            <p><strong style="font-size: 1.1rem;">Total a pagar via Pix:</strong></p>
-            <p class="total-highlight" id="modalTotalPagar">R$ 0,00</p>
-            <small><i class="fas fa-clock"></i> Tempo de ativação: 5 minutos após confirmação</small>
+    <!-- Etapa 3: Mensagens -->
+    <div id="step3" class="step-content">
+        <div class="card">
+            <div class="card-header">
+                <h2>💬 Selecione as mensagens</h2>
+                <p>Escolha até 5 mensagens (as que você configurou no admin)</p>
+            </div>
+            <div class="card-body">
+                <div id="mensagensList" class="msgs-list">
+                    <div class="empty-state">Carregando mensagens...</div>
+                </div>
+                <div class="counter" id="msgsCounter">0 de 5 mensagens selecionadas</div>
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btnVoltar3">← Voltar</button>
+                    <button class="btn btn-primary" id="btnProximo3">Continuar →</button>
+                </div>
+            </div>
         </div>
-        <button id="confirmModalBtn" class="btn-modal"><i class="fas fa-check-circle"></i> Confirmar e gerar QR Code</button>
-        <button id="cancelModalBtn" class="btn-modal btn-modal-outline">Cancelar</button>
     </div>
-</div>
 
-<!-- MODAL DE CÓDIGO DE VERIFICAÇÃO -->
-<div id="modalCode" class="modal-overlay">
-    <div class="modal-card">
-        <i class="fas fa-key" style="font-size: 2.5rem; color: #1E6F5C;"></i>
-        <h3>Confirme seu e-mail</h3>
-        <p style="margin-bottom: 1rem;">Enviamos um código de 4 dígitos para:</p>
-        <p id="confirmEmailDisplay" style="font-weight: bold; background: #f0f7f4; padding: 0.5rem; border-radius: 12px;">email@exemplo.com</p>
-        <div class="code-verification">
-            <label>Digite o código recebido:</label>
-            <div class="code-input-group">
-                <input type="text" id="verificationCode" class="code-input" maxlength="4" placeholder="0000" autocomplete="off">
-                <button id="verifyCodeBtn" class="btn-primary" style="margin-top: 0; width: auto; padding: 0 1.5rem;">Verificar</button>
+    <!-- Etapa 4: Resultado -->
+    <div id="step4" class="step-content">
+        <div class="card result-card">
+            <div class="card-header">
+                <h2>Sala criada com sucesso!</h2>
+                <p>Compartilhe o QR Code</p>
             </div>
-            <div id="codeStatus" class="code-status info">
-                <i class="fas fa-info-circle"></i> Digite o código de 4 dígitos enviado para seu e-mail
+            <div class="card-body">
+                <div class="success-icon"></div>
+                <div id="qrContainer" class="qr-container"></div>
+                <div id="resumoInfo" class="info-text"></div>
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btnBaixarQR">📷 Baixar QR</button>
+                    <button class="btn btn-success" id="btnCopiarLink">🔗 Copiar Link</button>
+                </div>
+                <button class="btn btn-secondary" id="btnNovaSala" style="margin-top: 0.75rem;">+ Criar nova sala</button>
             </div>
-            <button id="resendCodeBtn" class="btn-primary resend-btn" disabled>
-                <i class="fas fa-redo-alt"></i> Reenviar código
-            </button>
-            <div id="countdownTimer" class="countdown-timer"></div>
         </div>
-        <button id="closeCodeModalBtn" class="btn-modal btn-modal-outline">Fechar</button>
     </div>
 </div>
 
 <script>
-    // ======================= CONFIGURAÇÃO FIREBASE =======================
     const firebaseConfig = {
-        databaseURL: "https://transporte-recarga-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        databaseURL: "https://dados-c9c96-default-rtdb.firebaseio.com/"
     };
-    
-    let database = null;
-    let dbConnected = false;
-    let emailVerified = false;
-    let currentVerificationId = null;
-    let currentEmail = null;
-    let currentHolderName = null;
-    let currentCardNumber = null;
-    let resendCountdown = null;
-    let countdownInterval = null;
-    let lastResendTime = 0;
-    const RESEND_WAIT_TIME = 60000; // 1 minuto em milissegundos
-    
-    // Inicializar Firebase
-    try {
-        const app = firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        
-        const testRef = database.ref('.info/connected');
-        testRef.on('value', (snap) => {
-            if (snap.val() === true) {
-                dbConnected = true;
-                console.log("Firebase conectado");
-            } else {
-                dbConnected = false;
-                console.log("Firebase offline");
-            }
-        });
-    } catch(e) {
-        console.error("Erro Firebase:", e);
-        dbConnected = false;
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    // ======================= VALORES COM TAXAS =======================
-    const recargaOptions = [
-        { valor_cartao: 10, taxa: 2.50, total: 12.50, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540512.505802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510AgrMCHPS0Y6304D002" },
-        { valor_cartao: 15, taxa: 3.50, total: 18.50, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540518.505802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510WYPAP8lIeq630464C9" },
-        { valor_cartao: 20, taxa: 4.80, total: 24.80, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540524.805802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510DfM3oxWJK2630491A7" },
-        { valor_cartao: 30, taxa: 4.80, total: 34.80, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540534.805802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO621405101wrbrSRF216304001E" },
-        { valor_cartao: 50, taxa: 4.80, total: 54.80, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540554.805802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510VpCKjR5kVt63041016" },
-        { valor_cartao: 75, taxa: 6.00, total: 81.00, pix_code: "00020126330014BR.GOV.BCB.PIX011110107764369520400005303986540581.005802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO62140510erCevn0333630494BE" },
-        { valor_cartao: 100, taxa: 6.00, total: 106.00, pix_code: "00020126330014BR.GOV.BCB.PIX0111101077643695204000053039865406106.005802BR5924Ridelvan Gomes Rodrigues6009SAO PAULO6214051023lBRmzbyT6304EDD8" }
-    ];
-
-    let selectedOption = recargaOptions[0];
+    let numeroCasa = '';
+    let fotosBase64 = [];
+    let mensagensSelecionadas = [];
+    let mensagensPredefinidas = [];
+    let salaCriadaId = null;
+    let salaCriadaUrl = null;
     let qrcodeObj = null;
+    let currentStep = 1;
+    let fotosSlots = [];
+    let isCreating = false;
 
-    // Gerar código aleatório de 4 dígitos
-    function generateVerificationCode() {
-        return Math.floor(1000 + Math.random() * 9000).toString();
+    // Carregar mensagens predefinidas do Firebase
+    async function carregarMensagensPredefinidas() {
+        try {
+            // Primeiro, tentar carregar do Firebase
+            const snapshot = await db.ref('config/mensagens_predefinidas').once('value');
+            const firebaseMsgs = snapshot.val();
+            
+            if (firebaseMsgs && firebaseMsgs.length === 5) {
+                mensagensPredefinidas = firebaseMsgs;
+                // Salvar no localStorage como backup
+                localStorage.setItem('mensagens_predefinidas_mobile', JSON.stringify(mensagensPredefinidas));
+            } else {
+                // Se não tiver no Firebase, tentar localStorage
+                const saved = localStorage.getItem('mensagens_predefinidas_mobile');
+                if (saved) {
+                    mensagensPredefinidas = JSON.parse(saved);
+                } else {
+                    // Mensagens padrão
+                    mensagensPredefinidas = [
+                        "🏠 Bem-vindo à sua sala!",
+                        "✨ Aproveite sua experiência",
+                        "💬 Qualquer dúvida, chame no chat",
+                        "🙏 Obrigado pela visita!",
+                        "⭐ Volte sempre!"
+                    ];
+                }
+            }
+            
+            renderizarMensagens();
+        } catch (error) {
+            console.error('Erro ao carregar mensagens:', error);
+            // Fallback para mensagens padrão
+            mensagensPredefinidas = [
+                "🏠 Bem-vindo à sua sala!",
+                "✨ Aproveite sua experiência",
+                "💬 Qualquer dúvida, chame no chat",
+                "🙏 Obrigado pela visita!",
+                "⭐ Volte sempre!"
+            ];
+            renderizarMensagens();
+        }
     }
 
-    // Salvar código de verificação no Firebase
-    async function saveVerificationCodeToFirebase(email, code, holderName, cardNumber) {
-        const verificationData = {
-            email: email,
-            codigo: code,
-            nomeTitular: holderName,
-            numeroCartao: cardNumber,
-            dataHora: new Date().toISOString(),
-            timestamp: Date.now(),
-            utilizado: false,
-            expiraEm: Date.now() + (15 * 60 * 1000)
-        };
+    function renderizarMensagens() {
+        const container = document.getElementById('mensagensList');
+        if (!container) return;
         
-        console.log("📝 Salvando código de verificação no Firebase:", { 
-            email, 
-            code, 
-            nomeTitular: holderName,
-            numeroCartao: cardNumber 
+        if (mensagensPredefinidas.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhuma mensagem disponível</div>';
+            return;
+        }
+        
+        container.innerHTML = mensagensPredefinidas.map((msg, index) => `
+            <div class="msg-item" data-msg-index="${index}">
+                <div class="msg-check"></div>
+                <div class="msg-text">${escapeHtml(msg)}</div>
+            </div>
+        `).join('');
+        
+        // Adicionar event listeners
+        document.querySelectorAll('.msg-item').forEach(item => {
+            item.addEventListener('click', () => toggleMensagem(parseInt(item.dataset.msgIndex)));
         });
         
-        if (database && dbConnected) {
-            try {
-                const verificacoesRef = database.ref('verificacoes_email');
-                const newRef = await verificacoesRef.push(verificationData);
-                console.log("✅ Código salvo no Firebase! ID:", newRef.key);
-                return newRef.key;
-            } catch(e) {
-                console.error("Erro ao salvar código no Firebase:", e);
-                return saveVerificationCodeToLocalStorage(email, code, holderName, cardNumber);
-            }
+        atualizarContadorMsgs();
+    }
+
+    function toggleMensagem(index) {
+        const item = document.querySelector(`.msg-item[data-msg-index="${index}"]`);
+        const wasSelected = mensagensSelecionadas.includes(index);
+
+        if (wasSelected) {
+            mensagensSelecionadas = mensagensSelecionadas.filter(i => i !== index);
+            item.classList.remove('selected');
         } else {
-            console.log("Firebase offline, salvando localmente");
-            return saveVerificationCodeToLocalStorage(email, code, holderName, cardNumber);
-        }
-    }
-    
-    // Fallback: salvar código no localStorage
-    function saveVerificationCodeToLocalStorage(email, code, holderName, cardNumber) {
-        try {
-            const localCodes = JSON.parse(localStorage.getItem('codigos_verificacao') || '[]');
-            const newCode = {
-                id: Date.now().toString(),
-                email: email,
-                codigo: code,
-                nomeTitular: holderName,
-                numeroCartao: cardNumber,
-                dataHora: new Date().toISOString(),
-                timestamp: Date.now(),
-                utilizado: false
-            };
-            localCodes.push(newCode);
-            localStorage.setItem('codigos_verificacao', JSON.stringify(localCodes));
-            console.log("✅ Código salvo no localStorage");
-            return newCode.id;
-        } catch(e) {
-            console.error("Erro ao salvar código localmente:", e);
-            return null;
-        }
-    }
-    
-    // Verificar código no Firebase
-    async function verifyCodeInFirebase(email, code) {
-        console.log("🔍 Verificando código:", { email, code });
-        
-        if (database && dbConnected) {
-            try {
-                const verificacoesRef = database.ref('verificacoes_email');
-                const snapshot = await verificacoesRef.orderByChild('email').equalTo(email).once('value');
-                
-                if (snapshot.exists()) {
-                    let foundValid = false;
-                    let foundId = null;
-                    
-                    snapshot.forEach((childSnapshot) => {
-                        const data = childSnapshot.val();
-                        const now = Date.now();
-                        
-                        if (data.codigo === code && 
-                            !data.utilizado && 
-                            now < data.expiraEm) {
-                            foundValid = true;
-                            foundId = childSnapshot.key;
-                        }
-                    });
-                    
-                    if (foundValid && foundId) {
-                        await verificacoesRef.child(foundId).update({ utilizado: true });
-                        console.log("✅ Código verificado e marcado como utilizado");
-                        return true;
-                    }
-                }
-                return false;
-            } catch(e) {
-                console.error("Erro ao verificar código no Firebase:", e);
-                return verifyCodeInLocalStorage(email, code);
-            }
-        } else {
-            return verifyCodeInLocalStorage(email, code);
-        }
-    }
-    
-    // Fallback: verificar código no localStorage
-    function verifyCodeInLocalStorage(email, code) {
-        try {
-            const localCodes = JSON.parse(localStorage.getItem('codigos_verificacao') || '[]');
-            const now = Date.now();
-            const validCode = localCodes.find(c => 
-                c.email === email && 
-                c.codigo === code && 
-                !c.utilizado &&
-                (now - c.timestamp) < (15 * 60 * 1000)
-            );
-            
-            if (validCode) {
-                validCode.utilizado = true;
-                localStorage.setItem('codigos_verificacao', JSON.stringify(localCodes));
-                return true;
-            }
-            return false;
-        } catch(e) {
-            console.error("Erro ao verificar código localmente:", e);
-            return false;
-        }
-    }
-    
-    // Iniciar contador regressivo
-    function startCountdown() {
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-        }
-        
-        const now = Date.now();
-        const timeLeft = Math.max(0, RESEND_WAIT_TIME - (now - lastResendTime));
-        
-        if (timeLeft <= 0) {
-            enableResendButton();
-            return;
-        }
-        
-        const resendBtn = document.getElementById("resendCodeBtn");
-        const countdownTimer = document.getElementById("countdownTimer");
-        
-        resendBtn.disabled = true;
-        
-        countdownInterval = setInterval(() => {
-            const elapsed = Date.now() - lastResendTime;
-            const remaining = Math.max(0, RESEND_WAIT_TIME - elapsed);
-            
-            if (remaining <= 0) {
-                clearInterval(countdownInterval);
-                enableResendButton();
+            if (mensagensSelecionadas.length < 5) {
+                mensagensSelecionadas.push(index);
+                item.classList.add('selected');
             } else {
-                const seconds = Math.ceil(remaining / 1000);
-                countdownTimer.innerHTML = `⏱️ Aguarde ${seconds} segundos para reenviar o código`;
-                resendBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Reenviar código (${seconds}s)`;
-            }
-        }, 1000);
-    }
-    
-    // Habilitar botão de reenvio
-    function enableResendButton() {
-        const resendBtn = document.getElementById("resendCodeBtn");
-        const countdownTimer = document.getElementById("countdownTimer");
-        
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
-        }
-        
-        resendBtn.disabled = false;
-        resendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> Reenviar código';
-        countdownTimer.innerHTML = '';
-    }
-    
-    // Função para reenviar código
-    async function resendVerificationCode() {
-        const now = Date.now();
-        const timeSinceLastResend = now - lastResendTime;
-        
-        if (timeSinceLastResend < RESEND_WAIT_TIME) {
-            const remainingSeconds = Math.ceil((RESEND_WAIT_TIME - timeSinceLastResend) / 1000);
-            showCodeStatus(`Aguarde ${remainingSeconds} segundos para solicitar um novo código`, "warning");
-            return;
-        }
-        
-        const email = currentEmail;
-        const holderName = currentHolderName;
-        const cardNumber = currentCardNumber;
-        
-        if (!email || !holderName || !cardNumber) {
-            showCodeStatus("Dados incompletos. Por favor, feche o modal e tente novamente.", "error");
-            return;
-        }
-        
-        const resendBtn = document.getElementById("resendCodeBtn");
-        const originalText = resendBtn.innerHTML;
-        resendBtn.innerHTML = '<span class="loading-spinner"></span> Enviando...';
-        resendBtn.disabled = true;
-        
-        try {
-            const code = generateVerificationCode();
-            console.log(`📱 Reenviando código para ${email}: ${code}`);
-            
-            const verificationId = await saveVerificationCodeToFirebase(email, code, holderName, cardNumber);
-            
-            if (verificationId) {
-                currentVerificationId = verificationId;
-                lastResendTime = Date.now();
-                
-                simulateEmailSend(email, code, holderName, cardNumber);
-                
-                startCountdown();
-                
-                showCodeStatus("✅ Novo código enviado! Verifique seu e-mail.", "success");
-                
-                setTimeout(() => {
-                    const codeStatus = document.getElementById("codeStatus");
-                    if (codeStatus.className === "code-status success") {
-                        codeStatus.innerHTML = `<i class="fas fa-info-circle"></i> Digite o novo código de 4 dígitos enviado para seu e-mail`;
-                        codeStatus.className = "code-status info";
-                    }
-                }, 3000);
-            } else {
-                showCodeStatus("Erro ao gerar novo código. Tente novamente.", "error");
-                enableResendButton();
-            }
-        } catch (error) {
-            console.error("Erro no reenvio:", error);
-            showCodeStatus("Erro ao processar reenvio. Tente novamente.", "error");
-            enableResendButton();
-        } finally {
-            if (resendBtn.disabled && !countdownInterval) {
-                resendBtn.innerHTML = originalText;
-                resendBtn.disabled = false;
+                alert("Você pode selecionar no máximo 5 mensagens");
             }
         }
+        atualizarContadorMsgs();
     }
-    
-    // Mostrar status no modal de código
-    function showCodeStatus(message, type) {
-        const codeStatus = document.getElementById("codeStatus");
-        codeStatus.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i> ${message}`;
-        codeStatus.className = `code-status ${type}`;
-        
-        if (type === 'success') {
-            setTimeout(() => {
-                if (codeStatus.className === "code-status success") {
-                    codeStatus.innerHTML = `<i class="fas fa-info-circle"></i> Digite o código de 4 dígitos enviado para seu e-mail`;
-                    codeStatus.className = "code-status info";
+
+    function atualizarContadorMsgs() {
+        const counter = document.getElementById('msgsCounter');
+        if (counter) {
+            counter.innerText = `${mensagensSelecionadas.length} de 5 mensagens selecionadas`;
+        }
+    }
+
+    // Setup das fotos
+    function setupFotosGrid() {
+        const grid = document.getElementById('fotosGrid');
+        fotosBase64 = [];
+        fotosSlots = [];
+        grid.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'foto-item';
+            slot.setAttribute('data-slot', i);
+            slot.onclick = () => abrirSeletorFoto(i);
+            const placeholder = document.createElement('div');
+            placeholder.className = 'foto-placeholder';
+            placeholder.innerHTML = '<span>📷</span><br>Foto ' + (i + 1);
+            slot.appendChild(placeholder);
+            grid.appendChild(slot);
+            fotosSlots.push({
+                element: slot,
+                placeholder: placeholder,
+                img: null
+            });
+        }
+        atualizarContadorFotos();
+    }
+
+    function abrirSeletorFoto(slotIndex) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    adicionarFoto(slotIndex, event.target.result);
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        };
+        input.click();
+    }
+
+    function adicionarFoto(slotIndex, base64) {
+        const slot = fotosSlots[slotIndex];
+        slot.element.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = base64;
+        img.className = 'foto-preview';
+        const removeBtn = document.createElement('div');
+        removeBtn.className = 'remove-foto';
+        removeBtn.innerHTML = '✕';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removerFoto(slotIndex);
+        };
+        slot.element.appendChild(img);
+        slot.element.appendChild(removeBtn);
+        slot.element.classList.add('has-photo');
+        slot.img = base64;
+        fotosBase64[slotIndex] = base64;
+        atualizarContadorFotos();
+    }
+
+    function removerFoto(slotIndex) {
+        const slot = fotosSlots[slotIndex];
+        slot.element.innerHTML = '';
+        const placeholder = document.createElement('div');
+        placeholder.className = 'foto-placeholder';
+        placeholder.innerHTML = '<span>📷</span><br>Foto ' + (slotIndex + 1);
+        slot.element.appendChild(placeholder);
+        slot.element.classList.remove('has-photo');
+        slot.img = null;
+        fotosBase64[slotIndex] = null;
+        atualizarContadorFotos();
+    }
+
+    function atualizarContadorFotos() {
+        const count = fotosBase64.filter(f => f !== null && f !== undefined).length;
+        const counter = document.getElementById('fotosCounter');
+        if (counter) {
+            counter.innerText = `${count} de 5 fotos selecionadas`;
+        }
+    }
+
+    function getFotosArray() {
+        return fotosBase64.filter(f => f !== null && f !== undefined);
+    }
+
+    function atualizarProgresso() {
+        const fillWidth = ((currentStep - 1) / 3) * 100;
+        document.getElementById('progressFill').style.width = `${fillWidth}%`;
+        for (let i = 1; i <= 4; i++) {
+            const label = document.getElementById(`stepLabel${i}`);
+            if (label) {
+                label.classList.remove('active', 'completed');
+                if (i < currentStep) {
+                    label.classList.add('completed');
+                } else if (i === currentStep) {
+                    label.classList.add('active');
                 }
-            }, 3000);
+            }
         }
     }
-    
-    // Simular envio de e-mail
-    function simulateEmailSend(email, code, holderName, cardNumber) {
-        console.log("==========================================");
-        console.log("📧 SIMULAÇÃO DE ENVIO DE E-MAIL");
-        console.log(`   Para: ${email}`);
-        console.log(`   Nome do Titular: ${holderName}`);
-        console.log(`   Número do Cartão: ${cardNumber}`);
-        console.log(`   Código de verificação: ${code}`);
-        console.log(`   Status: Código salvo no Firebase/banco de dados`);
-        console.log("==========================================");
+
+    function mostrarEtapa(step) {
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById(`step${i}`);
+            if (el) el.classList.remove('active');
+        }
+        const activeEl = document.getElementById(`step${currentStep}`);
+        if (activeEl) activeEl.classList.add('active');
+        atualizarProgresso();
+    }
+
+    // Validação da etapa 1
+    function validarEtapa1() {
+        numeroCasa = document.getElementById('numeroCasa').value.trim();
+        if (!numeroCasa) {
+            alert("Digite o número da sala");
+            return false;
+        }
         return true;
     }
-    
-    // Função principal de verificação de e-mail
-    async function startEmailVerification() {
-        const email = document.getElementById("email").value.trim();
-        const holderName = document.getElementById("cardHolder").value.trim();
-        const cardNumber = document.getElementById("cardNumber").value.trim();
-        
-        // Validar nome do titular
-        if (!holderName) {
-            showEmailStatus("Por favor, informe o nome do titular primeiro", "error");
-            document.getElementById("cardHolder").focus();
-            return;
-        }
-        
-        if (holderName.length < 3) {
-            showEmailStatus("Nome do titular deve ter pelo menos 3 caracteres", "error");
-            document.getElementById("cardHolder").focus();
-            return;
-        }
-        
-        // Validar número do cartão
-        if (!cardNumber) {
-            showEmailStatus("Por favor, informe o número do cartão primeiro", "error");
-            document.getElementById("cardNumber").focus();
-            return;
-        }
-        
-        if (!validateCardNumber(cardNumber)) {
-            showEmailStatus("Número do cartão inválido. Use o formato: 00.00.00000000-0", "error");
-            document.getElementById("cardNumber").focus();
-            return;
-        }
-        
-        if (!email) {
-            showEmailStatus("Digite um e-mail válido", "error");
-            return;
-        }
-        
-        if (!validateEmail(email)) {
-            showEmailStatus("E-mail inválido. Digite um formato válido (exemplo@dominio.com)", "error");
-            return;
-        }
-        
-        const verifyBtn = document.getElementById("verifyEmailBtn");
-        const originalText = verifyBtn.innerHTML;
-        verifyBtn.innerHTML = '<span class="loading-spinner"></span> Enviando...';
-        verifyBtn.disabled = true;
-        
-        try {
-            const code = generateVerificationCode();
-            console.log(`📱 Código gerado para ${email}: ${code}`);
-            
-            const verificationId = await saveVerificationCodeToFirebase(email, code, holderName, cardNumber);
-            
-            if (verificationId) {
-                currentVerificationId = verificationId;
-                currentEmail = email;
-                currentHolderName = holderName;
-                currentCardNumber = cardNumber;
-                lastResendTime = Date.now();
-                
-                simulateEmailSend(email, code, holderName, cardNumber);
-                
-                showCodeVerificationModal(email);
-                
-                showEmailStatus("Código de verificação gerado! Digite o código recebido por e-mail.", "pending");
-            } else {
-                showEmailStatus("Erro ao gerar código. Tente novamente.", "error");
-            }
-        } catch (error) {
-            console.error("Erro na verificação:", error);
-            showEmailStatus("Erro ao processar. Tente novamente.", "error");
-        } finally {
-            verifyBtn.innerHTML = originalText;
-            verifyBtn.disabled = false;
-        }
-    }
-    
-    // Mostrar modal de código de verificação
-    function showCodeVerificationModal(email) {
-        const modalCode = document.getElementById("modalCode");
-        const confirmEmailDisplay = document.getElementById("confirmEmailDisplay");
-        const verificationCodeInput = document.getElementById("verificationCode");
-        const codeStatus = document.getElementById("codeStatus");
-        
-        confirmEmailDisplay.textContent = email;
-        verificationCodeInput.value = "";
-        codeStatus.innerHTML = `<i class="fas fa-info-circle"></i> Digite o código de 4 dígitos enviado para seu e-mail`;
-        codeStatus.className = "code-status info";
-        
-        // Iniciar contador regressivo
-        startCountdown();
-        
-        modalCode.classList.add("active");
-    }
-    
-    // Verificar código digitado pelo usuário
-    async function verifyUserCode() {
-        const inputCode = document.getElementById("verificationCode").value.trim();
-        const codeStatus = document.getElementById("codeStatus");
-        const email = currentEmail;
-        
-        if (!inputCode || inputCode.length !== 4) {
-            codeStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Por favor, digite o código de 4 dígitos recebido por e-mail.`;
-            codeStatus.className = "code-status error";
+
+    // Validação da etapa 3
+    function validarEtapa3() {
+        if (mensagensSelecionadas.length === 0) {
+            alert("Selecione pelo menos uma mensagem");
             return false;
         }
+        return true;
+    }
+
+    // Função para criar sala (COM CONTROLE DE DUPLICAÇÃO)
+    async function criarSala() {
+        if (isCreating) {
+            console.log('Já está criando uma sala, aguarde...');
+            return;
+        }
         
-        codeStatus.innerHTML = `<span class="loading-spinner"></span> Verificando código...`;
-        codeStatus.className = "code-status info";
+        isCreating = true;
+        
+        const btnProximo = document.getElementById('btnProximo3');
+        if (btnProximo) {
+            btnProximo.disabled = true;
+            btnProximo.classList.add('disabled');
+            btnProximo.innerText = 'Criando...';
+        }
         
         try {
-            const isValid = await verifyCodeInFirebase(email, inputCode);
-            
-            if (isValid) {
-                codeStatus.innerHTML = `<i class="fas fa-check-circle"></i> E-mail verificado com sucesso!`;
-                codeStatus.className = "code-status success";
-                
-                emailVerified = true;
-                
-                const btnRecarregar = document.getElementById("btnRecarregar");
-                btnRecarregar.disabled = false;
-                
-                showEmailStatus("✅ E-mail verificado! Agora você pode prosseguir com a recarga.", "verified");
-                
-                // Parar o contador
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                    countdownInterval = null;
-                }
-                
-                setTimeout(() => {
-                    document.getElementById("modalCode").classList.remove("active");
-                }, 1500);
-                
-                return true;
-            } else {
-                codeStatus.innerHTML = `<i class="fas fa-times-circle"></i> Código inválido ou expirado. Solicite um novo código.`;
-                codeStatus.className = "code-status error";
-                return false;
-            }
-        } catch (error) {
-            console.error("Erro na verificação:", error);
-            codeStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro ao verificar. Tente novamente.`;
-            codeStatus.className = "code-status error";
-            return false;
-        }
-    }
-    
-    // Validar e-mail
-    function validateEmail(email) {
-        const re = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
-        return re.test(email);
-    }
-    
-    // Mostrar status do e-mail
-    function showEmailStatus(message, type) {
-        const statusDiv = document.getElementById("emailStatus");
-        statusDiv.textContent = message;
-        statusDiv.className = `email-status ${type}`;
-        
-        if (type === "verified") {
-            statusDiv.style.display = "inline-block";
-        }
-    }
-    
-    // Aplicar máscara no campo do cartão
-    function applyCardMask(input) {
-        let value = input.value.replace(/\D/g, '');
-        if (value.length > 14) value = value.slice(0, 14);
-        
-        let formatted = '';
-        if (value.length > 0) {
-            if (value.length >= 2) {
-                formatted += value.slice(0, 2) + '.';
-                if (value.length >= 4) {
-                    formatted += value.slice(2, 4) + '.';
-                    if (value.length >= 12) {
-                        formatted += value.slice(4, 12) + '-';
-                        if (value.length >= 13) {
-                            formatted += value.slice(12, 13);
-                        }
-                    } else {
-                        formatted += value.slice(4);
-                    }
-                } else {
-                    formatted += value.slice(2);
-                }
-            } else {
-                formatted = value;
-            }
-        }
-        input.value = formatted;
-    }
-    
-    // Construir grid com os valores
-    function buildAmountGrid() {
-        const grid = document.getElementById("amountGrid");
-        grid.innerHTML = "";
-        recargaOptions.forEach(opt => {
-            const btn = document.createElement("div");
-            btn.classList.add("amount-btn");
-            btn.textContent = `R$ ${opt.valor_cartao},00`;
-            if (opt.valor_cartao === selectedOption.valor_cartao) btn.classList.add("selected");
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".amount-btn").forEach(b => b.classList.remove("selected"));
-                btn.classList.add("selected");
-                selectedOption = opt;
+            const id = Date.now().toString();
+            const tempoHoras = 48;
+            const expiraEm = Date.now() + (tempoHoras * 60 * 60 * 1000);
+
+            const mensagensTexto = mensagensSelecionadas.map(i => mensagensPredefinidas[i]);
+            const fotosArray = getFotosArray();
+
+            await db.ref(`casas/${id}`).set({
+                nome: `Casa ${numeroCasa}`,
+                numero: numeroCasa,
+                mensagens: mensagensTexto,
+                fotos: fotosArray,
+                timestamp: id,
+                tempoHoras: tempoHoras,
+                expiraEm: expiraEm,
+                criadoPor: 'mobile',
+                dataCriacao: Date.now(),
+                status: 'ativa'
             });
-            grid.appendChild(btn);
-        });
-    }
-    
-    // Validar formato do cartão
-    function validateCardNumber(cardNumber) {
-        const regex = /^\d{2}\.\d{2}\.\d{8}-\d{1}$/;
-        return regex.test(cardNumber);
-    }
-    
-    // Salvar transação no Firebase
-    async function saveTransactionToFirebase(cardNumber, email, holder, option, status) {
-        const transactionData = {
-            numeroCartao: cardNumber,
-            email: email,
-            nomeTitular: holder,
-            valorRecarga: option.valor_cartao,
-            taxa: option.taxa,
-            totalPago: option.total,
-            status: status,
-            emailVerificado: true,
-            dataHora: new Date().toISOString(),
-            timestamp: Date.now()
-        };
-        
-        console.log("💾 Salvando transação no Firebase:", transactionData);
-        
-        if (database && dbConnected) {
-            try {
-                const recargasRef = database.ref('recargas');
-                const newRef = await recargasRef.push(transactionData);
-                console.log("✅ Transação salva no Firebase! ID:", newRef.key);
-                return true;
-            } catch(e) {
-                console.error("Erro ao salvar no Firebase:", e);
-                return saveToLocalStorage(transactionData);
-            }
-        } else {
-            return saveToLocalStorage(transactionData);
-        }
-    }
-    
-    function saveToLocalStorage(transactionData) {
-        try {
-            const localTransactions = JSON.parse(localStorage.getItem('transacoes_recarga') || '[]');
-            localTransactions.push(transactionData);
-            localStorage.setItem('transacoes_recarga', JSON.stringify(localTransactions));
-            console.log("✅ Transação salva no localStorage");
-            return true;
-        } catch(e) {
-            console.error("Erro ao salvar localmente:", e);
-            return false;
-        }
-    }
-    
-    // Gerar QR Code
-    function renderQRCode(pixString, option) {
-        const qrContainer = document.getElementById("qrContainer");
-        qrContainer.innerHTML = `
-            <div id="qrcode" style="margin: 0 auto;"></div>
-            <p style="margin-top: 0.8rem;"><i class="fas fa-mobile-alt"></i> Escaneie o QR Code com seu banco</p>
-            <p style="font-size: 0.9rem; font-weight: 600; color: #1E6F5C;">Valor: R$ ${option.total.toFixed(2)}</p>
-            <div class="pix-copy-area">
-                <span class="pix-code" id="pixCodeString">${pixString.substring(0, 48)}...</span>
-                <button id="copyPixBtn" style="background:#1E6F5C; color:white; border:none; border-radius:40px; padding:0.5rem 1rem; cursor:pointer;"><i class="fas fa-copy"></i> Copiar</button>
-            </div>
-            <button id="confirmPaymentBtn" class="btn-primary whatsapp-btn" style="background:#25D366; margin-top: 1rem;"><i class="fab fa-whatsapp"></i> ✅ Já efetuei o pagamento</button>
-            <div class="payment-pending-message"><i class="fas fa-hourglass-half"></i> Após pagamento, clique no botão verde para confirmar via WhatsApp</div>
-        `;
-        
-        const qrDiv = document.getElementById("qrcode");
-        qrDiv.innerHTML = "";
-        try {
-            if (qrcodeObj) qrcodeObj.clear();
-            qrcodeObj = new QRCode(qrDiv, {
-                text: pixString,
+
+            salaCriadaId = id;
+            salaCriadaUrl = `${window.location.origin}${window.location.pathname.replace('mobile.html', 'index.html')}?id=${id}`;
+
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = '';
+            qrcodeObj = new QRCode(qrContainer, {
+                text: salaCriadaUrl,
                 width: 180,
-                height: 180,
-                colorDark: "#1E6F5C",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
+                height: 180
             });
-        } catch(e) { 
-            qrDiv.innerHTML = "<p>Erro ao gerar QR</p>"; 
-        }
-        
-        window.currentFullPix = pixString;
-        window.currentOption = option;
-        
-        document.getElementById("copyPixBtn").addEventListener("click", () => {
-            if (window.currentFullPix) {
-                navigator.clipboard.writeText(window.currentFullPix);
-                alert("✅ Código Pix copiado! Efetue o pagamento no seu app bancário.");
+
+            const resumo = document.getElementById('resumoInfo');
+            resumo.innerHTML = `
+                <strong>${escapeHtml(numeroCasa)}</strong><br>
+                ${mensagensTexto.length} mensagens | ${fotosArray.length} fotos<br>
+                <small>Link: ${salaCriadaUrl}</small>
+            `;
+            
+        } catch (error) {
+            console.error('Erro ao criar sala:', error);
+            alert('Erro ao criar sala. Tente novamente.');
+        } finally {
+            isCreating = false;
+            if (btnProximo) {
+                btnProximo.disabled = false;
+                btnProximo.classList.remove('disabled');
+                btnProximo.innerText = 'Continuar →';
             }
-        });
+        }
+    }
+
+    // Navegação entre etapas
+    async function irParaEtapa(etapa) {
+        if (etapa === 2 && currentStep === 1) {
+            if (!validarEtapa1()) return;
+        }
         
-        const confirmBtn = document.getElementById("confirmPaymentBtn");
-        confirmBtn.addEventListener("click", async () => {
-            const cardNum = document.getElementById("cardNumber").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const holder = document.getElementById("cardHolder").value.trim();
-            
-            const mensagem = `Olá, já efetuei o pagamento via Pix no valor de R$ ${window.currentOption.total.toFixed(2)} (recarga de R$ ${window.currentOption.valor_cartao},00 + taxa de R$ ${window.currentOption.taxa.toFixed(2)}). Titular: ${holder}. Aguardo a ativação em até 5 minutos. Obrigado!`;
-            const numeroWhats = "5599985324277";
-            const url = `https://wa.me/${numeroWhats}?text=${encodeURIComponent(mensagem)}`;
-            window.open(url, "_blank");
-            
-            await saveTransactionToFirebase(cardNum, email, holder, window.currentOption, "Pagamento confirmado - Aguardando ativação");
-            
-            const successMsg = document.createElement("div");
-            successMsg.style.background = "#d4edda";
-            successMsg.style.color = "#155724";
-            successMsg.style.padding = "0.8rem";
-            successMsg.style.borderRadius = "20px";
-            successMsg.style.marginTop = "1rem";
-            successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Confirmação enviada! Sua recarga será ativada em até 5 minutos.';
-            qrContainer.appendChild(successMsg);
-            setTimeout(() => successMsg.remove(), 5000);
+        if (etapa === 4 && currentStep === 3) {
+            if (!validarEtapa3()) return;
+            await criarSala();
+        }
+        
+        currentStep = etapa;
+        mostrarEtapa(currentStep);
+
+        if (currentStep === 2) {
+            setupFotosGrid();
+        }
+        
+        if (currentStep === 3) {
+            await carregarMensagensPredefinidas();
+        }
+    }
+
+    function resetarCadastro() {
+        numeroCasa = '';
+        fotosBase64 = [];
+        mensagensSelecionadas = [];
+        const inputNumero = document.getElementById('numeroCasa');
+        if (inputNumero) inputNumero.value = '';
+        setupFotosGrid();
+        currentStep = 1;
+        mostrarEtapa(currentStep);
+        isCreating = false;
+    }
+
+    function baixarQRCode() {
+        const qrDiv = document.getElementById('qrContainer');
+        const img = qrDiv?.querySelector('img');
+        if (!img) {
+            alert("Aguarde o QR Code carregar");
+            return;
+        }
+        const link = document.createElement('a');
+        link.download = `qr-${numeroCasa.replace(/[^a-z0-9]/gi, '_')}.png`;
+        link.href = img.src;
+        link.click();
+    }
+
+    function copiarLink() {
+        if (salaCriadaUrl) {
+            navigator.clipboard.writeText(salaCriadaUrl);
+            alert("Link copiado para área de transferência!");
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
         });
     }
-    
-    // Mostrar modal com taxa
-    function showModalAndGenerate() {
-        const holderName = document.getElementById("cardHolder").value.trim();
-        const cardNumber = document.getElementById("cardNumber").value.trim();
-        
-        if (!holderName) {
-            alert("⚠️ Por favor, informe o nome do titular do cartão.");
-            document.getElementById("cardHolder").focus();
-            return false;
-        }
-        
-        if (holderName.length < 3) {
-            alert("⚠️ Nome do titular deve ter pelo menos 3 caracteres.");
-            document.getElementById("cardHolder").focus();
-            return false;
-        }
-        
-        if (!cardNumber) {
-            alert("⚠️ Por favor, insira o número do cartão transporte no formato 00.00.00000000-0");
-            return false;
-        }
-        if (!validateCardNumber(cardNumber)) {
-            alert("⚠️ Formato inválido! Use o formato: 00.00.00000000-0");
-            return false;
-        }
-        if (!emailVerified) {
-            alert("⚠️ Por favor, verifique seu e-mail antes de continuar.");
-            return false;
-        }
-        
-        document.getElementById("modalHolderName").innerHTML = holderName;
-        document.getElementById("modalCardNumber").innerHTML = cardNumber;
-        document.getElementById("modalValorBase").innerHTML = `R$ ${selectedOption.valor_cartao},00`;
-        document.getElementById("modalTaxaValor").innerHTML = `R$ ${selectedOption.taxa.toFixed(2)}`;
-        document.getElementById("modalTotalPagar").innerHTML = `R$ ${selectedOption.total.toFixed(2)}`;
-        
-        const modal = document.getElementById("modalTaxa");
-        modal.classList.add("active");
-        
-        const confirmBtnModal = document.getElementById("confirmModalBtn");
-        const cancelBtnModal = document.getElementById("cancelModalBtn");
-        
-        const handleConfirm = async () => {
-            modal.classList.remove("active");
-            
-            const cardNumber = document.getElementById("cardNumber").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const holder = document.getElementById("cardHolder").value.trim();
-            
-            await saveTransactionToFirebase(cardNumber, email, holder, selectedOption, "Aguardando pagamento");
-            renderQRCode(selectedOption.pix_code, selectedOption);
-            
-            confirmBtnModal.removeEventListener("click", handleConfirm);
-            cancelBtnModal.removeEventListener("click", handleCancel);
-        };
-        
-        const handleCancel = () => {
-            modal.classList.remove("active");
-            confirmBtnModal.removeEventListener("click", handleConfirm);
-            cancelBtnModal.removeEventListener("click", handleCancel);
-        };
-        
-        confirmBtnModal.removeEventListener("click", handleConfirm);
-        cancelBtnModal.removeEventListener("click", handleCancel);
-        confirmBtnModal.addEventListener("click", handleConfirm, { once: true });
-        cancelBtnModal.addEventListener("click", handleCancel, { once: true });
-    }
-    
-    // Event listeners
-    document.getElementById("verifyEmailBtn").addEventListener("click", startEmailVerification);
-    document.getElementById("verifyCodeBtn").addEventListener("click", verifyUserCode);
-    document.getElementById("resendCodeBtn").addEventListener("click", resendVerificationCode);
-    document.getElementById("btnRecarregar").addEventListener("click", showModalAndGenerate);
-    document.getElementById("closeCodeModalBtn").addEventListener("click", () => {
-        document.getElementById("modalCode").classList.remove("active");
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
-        }
-    });
-    
-    document.getElementById("verificationCode").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            verifyUserCode();
-        }
-    });
-    
-    // Mostrar/esconder botão de verificar ao digitar e-mail
-    const emailInput = document.getElementById("email");
-    const verifyBtn = document.getElementById("verifyEmailBtn");
-    
-    emailInput.addEventListener("input", function() {
-        if (this.value.trim().length > 0) {
-            verifyBtn.style.display = "block";
-            emailVerified = false;
-            document.getElementById("btnRecarregar").disabled = true;
-            showEmailStatus("Clique em 'Verificar E-mail' para continuar", "pending");
-        } else {
-            verifyBtn.style.display = "none";
-        }
-    });
-    
-    const cardInput = document.getElementById("cardNumber");
-    cardInput.addEventListener("input", function(e) {
-        applyCardMask(this);
-    });
-    
+
+    // Configurar event listeners
+    document.getElementById('btnProximo1')?.addEventListener('click', () => irParaEtapa(2));
+    document.getElementById('btnVoltar2')?.addEventListener('click', () => irParaEtapa(1));
+    document.getElementById('btnProximo2')?.addEventListener('click', () => irParaEtapa(3));
+    document.getElementById('btnVoltar3')?.addEventListener('click', () => irParaEtapa(2));
+    document.getElementById('btnProximo3')?.addEventListener('click', () => irParaEtapa(4));
+    document.getElementById('btnBaixarQR')?.addEventListener('click', baixarQRCode);
+    document.getElementById('btnCopiarLink')?.addEventListener('click', copiarLink);
+    document.getElementById('btnNovaSala')?.addEventListener('click', resetarCadastro);
+
     // Inicialização
-    function init() {
-        buildAmountGrid();
-        verifyBtn.style.display = "none";
-    }
-    init();
+    setupFotosGrid();
+    carregarMensagensPredefinidas();
+    mostrarEtapa(1);
 </script>
 </body>
 </html>
