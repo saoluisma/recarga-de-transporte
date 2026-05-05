@@ -238,16 +238,6 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-        }
-
-        .msg-item.selected .msg-check {
-            background: #007aff;
-            border-color: #007aff;
-        }
-
-        .msg-item.selected .msg-check::after {
-            content: "✓";
-            color: white;
             font-size: 14px;
             font-weight: bold;
         }
@@ -498,65 +488,78 @@
     let currentStep = 1;
     let fotosSlots = [];
     let isCreating = false;
-    let mensagensUnsubscribe = null;
+    let mensagensListener = null;
 
-    // Carregar mensagens predefinidas do Firebase com LISTENER EM TEMPO REAL
-    function iniciarListenerMensagens() {
-        if (mensagensUnsubscribe) {
-            mensagensUnsubscribe();
-        }
-        
-        const mensagensRef = db.ref('config/mensagens_predefinidas');
-        const listener = mensagensRef.on('value', (snapshot) => {
+    // ==================== MENSAGENS ====================
+    
+    // Carregar mensagens diretamente do Firebase (sem listener para evitar loops)
+    async function carregarMensagensDoFirebase() {
+        try {
+            console.log("Carregando mensagens do Firebase...");
+            const snapshot = await db.ref('config/mensagens_predefinidas').once('value');
             const firebaseMsgs = snapshot.val();
             
-            if (firebaseMsgs && firebaseMsgs.length === 5) {
-                mensagensPredefinidas = firebaseMsgs;
-                // Salvar no localStorage como backup
-                localStorage.setItem('mensagens_predefinidas_mobile', JSON.stringify(mensagensPredefinidas));
-            } else {
-                // Se não tiver no Firebase, tentar localStorage
-                const saved = localStorage.getItem('mensagens_predefinidas_mobile');
-                if (saved) {
-                    mensagensPredefinidas = JSON.parse(saved);
-                } else {
-                    // Mensagens padrão
-                    mensagensPredefinidas = [
-                        "🏠 Bem-vindo à sua sala!",
-                        "✨ Aproveite sua experiência",
-                        "💬 Qualquer dúvida, chame no chat",
-                        "🙏 Obrigado pela visita!",
-                        "⭐ Volte sempre!"
-                    ];
-                }
+            console.log("Dados do Firebase:", firebaseMsgs);
+            
+            if (firebaseMsgs && Array.isArray(firebaseMsgs) && firebaseMsgs.length === 5) {
+                mensagensPredefinidas = [...firebaseMsgs];
+                // Salvar backup no localStorage
+                localStorage.setItem('mensagens_predefinidas_mobile_backup', JSON.stringify(mensagensPredefinidas));
+                console.log("✅ Mensagens carregadas do Firebase:", mensagensPredefinidas);
+                return true;
             }
             
-            // Se estiver na etapa 3, atualizar a interface
-            if (currentStep === 3) {
-                renderizarMensagens();
+            // Tentar backup do localStorage
+            const backup = localStorage.getItem('mensagens_predefinidas_mobile_backup');
+            if (backup) {
+                mensagensPredefinidas = JSON.parse(backup);
+                console.log("✅ Mensagens carregadas do backup localStorage:", mensagensPredefinidas);
+                return true;
             }
-        });
-        
-        mensagensUnsubscribe = () => mensagensRef.off('value', listener);
+            
+            // Mensagens padrão
+            mensagensPredefinidas = [
+                "🏠 Bem-vindo à sua sala!",
+                "✨ Aproveite sua experiência",
+                "💬 Qualquer dúvida, chame no chat",
+                "🙏 Obrigado pela visita!",
+                "⭐ Volte sempre!"
+            ];
+            console.log("✅ Mensagens padrão carregadas:", mensagensPredefinidas);
+            return true;
+            
+        } catch (error) {
+            console.error("❌ Erro ao carregar mensagens:", error);
+            mensagensPredefinidas = [
+                "🏠 Bem-vindo à sua sala!",
+                "✨ Aproveite sua experiência",
+                "💬 Qualquer dúvida, chame no chat",
+                "🙏 Obrigado pela visita!",
+                "⭐ Volte sempre!"
+            ];
+            return false;
+        }
     }
 
     function renderizarMensagens() {
         const container = document.getElementById('mensagensList');
         if (!container) return;
         
+        console.log("Renderizando mensagens. Qtde:", mensagensPredefinidas.length);
+        
         if (!mensagensPredefinidas || mensagensPredefinidas.length === 0) {
-            container.innerHTML = '<div class="empty-state">Nenhuma mensagem disponível</div>';
+            container.innerHTML = '<div class="empty-state">❌ Nenhuma mensagem disponível</div>';
             return;
         }
         
         container.innerHTML = mensagensPredefinidas.map((msg, index) => `
             <div class="msg-item" data-msg-index="${index}">
-                <div class="msg-check"></div>
+                <div class="msg-check">${mensagensSelecionadas.includes(index) ? '✓' : ''}</div>
                 <div class="msg-text">${escapeHtml(msg)}</div>
             </div>
         `).join('');
         
-        // Reaplicar seleções
+        // Adicionar event listeners
         document.querySelectorAll('.msg-item').forEach(item => {
             const idx = parseInt(item.dataset.msgIndex);
             if (mensagensSelecionadas.includes(idx)) {
@@ -575,10 +578,14 @@
         if (wasSelected) {
             mensagensSelecionadas = mensagensSelecionadas.filter(i => i !== index);
             item.classList.remove('selected');
+            const checkDiv = item.querySelector('.msg-check');
+            if (checkDiv) checkDiv.textContent = '';
         } else {
             if (mensagensSelecionadas.length < 5) {
                 mensagensSelecionadas.push(index);
                 item.classList.add('selected');
+                const checkDiv = item.querySelector('.msg-check');
+                if (checkDiv) checkDiv.textContent = '✓';
             } else {
                 alert("Você pode selecionar no máximo 5 mensagens");
             }
@@ -593,7 +600,8 @@
         }
     }
 
-    // Setup das fotos
+    // ==================== FOTOS ====================
+    
     function setupFotosGrid() {
         const grid = document.getElementById('fotosGrid');
         fotosBase64 = [];
@@ -680,6 +688,8 @@
         return fotosBase64.filter(f => f !== null && f !== undefined);
     }
 
+    // ==================== NAVEGAÇÃO ====================
+    
     function atualizarProgresso() {
         const fillWidth = ((currentStep - 1) / 3) * 100;
         document.getElementById('progressFill').style.width = `${fillWidth}%`;
@@ -723,11 +733,10 @@
         return true;
     }
 
+    // ==================== CRIAÇÃO DA SALA ====================
+    
     async function criarSala() {
-        if (isCreating) {
-            return;
-        }
-        
+        if (isCreating) return;
         isCreating = true;
         
         const btnProximo = document.getElementById('btnProximo3');
@@ -807,7 +816,12 @@
         }
         
         if (currentStep === 3) {
-            // Garantir que as mensagens estejam atualizadas antes de mostrar
+            // Recarregar mensagens ao entrar na etapa 3
+            const container = document.getElementById('mensagensList');
+            if (container) {
+                container.innerHTML = '<div class="empty-state">🔄 Carregando mensagens...</div>';
+            }
+            await carregarMensagensDoFirebase();
             renderizarMensagens();
         }
     }
@@ -854,6 +868,8 @@
         });
     }
 
+    // ==================== INICIALIZAÇÃO ====================
+    
     // Configurar event listeners
     document.getElementById('btnProximo1')?.addEventListener('click', () => irParaEtapa(2));
     document.getElementById('btnVoltar2')?.addEventListener('click', () => irParaEtapa(1));
@@ -864,10 +880,17 @@
     document.getElementById('btnCopiarLink')?.addEventListener('click', copiarLink);
     document.getElementById('btnNovaSala')?.addEventListener('click', resetarCadastro);
 
-    // Inicialização
+    // Inicializar
     setupFotosGrid();
-    iniciarListenerMensagens(); // Inicia listener em tempo real
     mostrarEtapa(1);
+    
+    // Carregar mensagens em segundo plano
+    carregarMensagensDoFirebase().then(() => {
+        // Se já estiver na etapa 3, renderizar
+        if (currentStep === 3) {
+            renderizarMensagens();
+        }
+    });
 </script>
 </body>
 </html>
